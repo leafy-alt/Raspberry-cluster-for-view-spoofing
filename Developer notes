@@ -1,0 +1,241 @@
+deployment_notes.md
+
+(Formatted perfectly for GitHub, copy-paste ready)
+
+
+---
+
+Project Hydra: Deployment Notes
+
+
+---
+
+Physical Setup
+
+Hardware Used:
+
+12x Raspberry Pi 4 (8GB RAM)
+
+2x Nvidia Jetson Nano (4GB)
+
+14x Raspberry Pi Compute Module 3 (across 2x Turing Pi boards)
+
+3x Raspberry Pi Compute Module 4 (PoE carrier boards)
+
+1x Drobo 800fs NAS (18TB storage)
+
+2x Managed Gigabit Switches
+
+1x PowerSpec B732 Desktop (Control/Brain node)
+
+
+
+
+---
+
+Cabling & Wiring
+
+Cluster Nodes
+
+Connect each Pi and Nano to Switch #1 via Gigabit Ethernet.
+
+Connect Turing Pi boards to Switch #1 as well.
+
+
+Storage
+
+Drobo NAS connected directly to Switch #1.
+
+Dedicated VLAN for storage traffic only.
+
+
+VPN Router
+
+CM4 running OpenWRT wired into Switch #2.
+
+Switch #2 uplinks to ISP modem/router (separate from cluster LAN).
+
+
+Controller
+
+PowerSpec B732 has dual NICs:
+
+NIC 1 connects to Switch #1 (Cluster LAN)
+
+NIC 2 connects to Switch #2 (VPN exit management)
+
+
+
+
+
+---
+
+Logical Network Layout
+
+Switch #1 — "Cluster Internal"
+
+VLAN 10 — Node Traffic
+
+VLAN 20 — Storage Traffic
+
+VLAN 30 — Management Traffic
+
+
+Switch #2 — "VPN Exit Side"
+
+VLAN 40 — Egress Traffic Only
+
+
+
+
+---
+
+VPN Handling (CM4 OpenWRT Node)
+
+Runs dual VPN providers:
+
+Private Internet Access (PIA)
+
+NordVPN
+
+
+VPN client rotates endpoints every 30 minutes via cron job:
+
+Kills old tunnel
+
+Pulls fresh config
+
+Brings up new tunnel
+
+
+DNS leak protection enabled.
+
+Full kill switch implemented (no traffic outside VPN allowed).
+
+
+
+---
+
+Kubernetes Bootstrap
+
+1. Initialize Master Node
+
+kubeadm init --pod-network-cidr=192.168.0.0/16
+
+
+2. Deploy Network Overlay (Calico)
+
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+
+3. Join all worker nodes using token provided.
+
+
+4. Label specialized nodes:
+
+kubectl label node <jetson-node> hardware=ai
+kubectl label node <openwrt-node> hardware=router
+
+
+5. Deploy MetalLB for Load Balancing
+
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+
+
+
+
+---
+
+Storage Access
+
+NAS mounted via NFS/iSCSI targets inside cluster.
+
+Persistent Volume Claims used for pod storage.
+
+
+
+---
+
+Fingerprint Obfuscation Techniques
+
+VPN endpoint rotation every 30 minutes.
+
+MAC randomization enforced by OpenWRT.
+
+Re-imaging nodes periodically with Ansible scripts.
+
+Random process killing and respawning to simulate different "users."
+
+Cluster nodes maintain randomized hostnames.
+
+TCP fingerprinting mitigated via VPN firewall settings.
+
+
+
+---
+
+Important Policies
+
+Air-gapped = No direct Internet access for cluster nodes.
+(All outbound goes through OpenWRT/VPN.)
+
+Zero Trust Model even inside cluster.
+
+Pods can't freely talk to each other unless explicitly allowed by Network Policies.
+
+
+Automated IP Ban Management
+(If certain IPs became poisoned or blacklisted, auto-kill scripts would reassign fresh IPs.)
+
+
+
+---
+
+Quotes I Lived By While Building This:
+
+> "Amateurs build houses. Professionals build bunkers."
+
+
+
+> "If they can't fingerprint you, they can't find you."
+
+
+
+
+---
+
+The Future
+
+Expand with better VPN rotation logic (Wireguard + ChaCha20).
+
+Replace RPi nodes with NanoPi R6S for even more power.
+
+Clustered AI/ML task dispatching.
+
+
+
+---
+
+Repo Goals
+
+Document full build logs
+
+Provide scripts for setup automation
+
+Inspire future generations to cluster like kings
+
+
+
+---
+
+Repo Name Ideas
+
+hydra-cluster
+
+airgap-vpn-farm
+
+view-machine-empire
+
+kubernetes-vpn-hydra
+
