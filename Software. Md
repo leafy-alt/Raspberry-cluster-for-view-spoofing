@@ -1,3 +1,17 @@
-# working on recompiling this project to keep 
-track of my learning and for maybe someone whos 
-trying to learn from my mistakes 
+Software Stack
+
+Kubernetes (k8s) used to orchestrate the cluster across all nodes.
+
+Custom Bash and Python scripts to handle:
+
+IP rotation
+
+Process recycling
+
+Node health monitoring
+
+
+OpenWRT on a CM4 for routing and VPN gateway management.
+
+Storage Access: NFS mounts linked to Drobo 800fs for shared persistence.
+
