@@ -1,14 +1,82 @@
-12x Raspberry Pi 4 (8GB RAM)
+Hardware Overview
 
-2x NVIDIA Jetson Nano (4GB models)
+This document breaks down the complete hardware stack used in Project Hydra.
 
-2x Turing Pi Cluster Boards populated with:
+
+---
+
+Compute Nodes
+
+12x Raspberry Pi 4B (8GB RAM)
+Main worker nodes; general workload execution.
+
+2x NVIDIA Jetson Nano (4GB RAM)
+Specialized nodes for heavier compute tasks (like video processing or ML spoofing).
+
+2x Turing Pi Cluster Boards
+Cluster backbone; housed CM3 nodes in compact format.
 
 14x Raspberry Pi Compute Module 3 (CM3)
-
+Lightweight worker nodes embedded in the Turing Pi boards.
 
 3x Raspberry Pi Compute Module 4 (CM4) with PoE Carrier Boards
+Router nodes, VPN nodes, and lightweight services.
 
-1x PowerSpec B732 Workstation (cluster brain/controller)
 
-1x Drobo 800fs NAS (18TB Networked Storage)
+
+---
+
+Networking
+
+1x Drobo 800fs NAS (18TB)
+Shared persistent storage (NFS mounted).
+
+1x OpenWRT Router (hosted on a CM4)
+VPN tunnel management, DNS routing, MAC/IP spoofing.
+
+2x Unmanaged Gigabit Switches
+Basic network backbone for all nodes.
+
+VPN Services Used:
+
+Private Internet Access (PIA)
+
+NordVPN
+Used for IP rotation and egress path obfuscation.
+
+
+
+
+---
+
+Controller
+
+1x PowerSpec B732 Workstation
+Kubernetes master node; full cluster control and monitoring.
+
+
+Specs:
+
+Intel i7 CPU
+
+32GB RAM
+
+SSD primary storage
+
+Dual NICs (for separate control and public networks)
+
+
+
+---
+
+Extra Notes
+
+All cluster nodes were powered through PoE wherever possible to simplify cabling and reboots.
+
+Cooling was handled manually (aka a shitload of fans and open cases).
+
+Heat management was critical — air temps were kept under 75°C with custom airflow setups.
+
+The CM4 running OpenWRT handled VPNs, DNS redirection, and MAC/IP randomization.
+
+Nodes reinstalled fresh system images every 30 minutes to avoid fingerprinting from service providers.
