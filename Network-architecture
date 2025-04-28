@@ -1,0 +1,164 @@
+Network Architecture Overview
+
+This document outlines the full network design of Project Hydra.
+
+
+---
+
+Topology
+
+Primary LAN (Air-Gapped)
+
+All nodes and controllers live on a dedicated, isolated VLAN.
+
+No direct Internet access except via VPN tunnels.
+
+
+VPN Exit Node (OpenWRT Router on CM4)
+
+Manages all VPN connections.
+
+Routes outgoing traffic through rotating VPN providers.
+
+Handles MAC address spoofing and IP rotation policies.
+
+Firewall rules enforced strict egress paths only.
+
+
+VPN Providers Used
+
+Private Internet Access (PIA)
+
+NordVPN
+
+
+Storage Network (iSCSI/NFS)
+
+Drobo 800fs serves 18TB over dedicated internal network.
+
+Jumbo frames enabled for better throughput.
+
+
+Cluster Control Network (Admin Only)
+
+Separated NIC/interface purely for cluster management traffic (Kubernetes).
+
+
+Switch Infrastructure
+
+Managed Gigabit Switches with VLAN and QoS support.
+
+Separate VLANs configured for:
+
+Node traffic
+
+Storage traffic
+
+Management traffic
+
+VPN egress traffic
+
+
+
+
+
+---
+
+Kubernetes Layout
+
+Full k8s cluster built using:
+
+kubeadm for initialization
+
+Calico for network overlay
+
+MetalLB for load balancing
+
+Custom node labels for workload specialization
+
+
+
+Node Roles
+
+RPi4s — General Purpose Compute Nodes
+
+Jetson Nanos — Specialized for ML/AI tasks (e.g., view generation, video decoding)
+
+CM3s — Lightweight service runners (heartbeat checkers, watchers, lightweight services)
+
+CM4s — Router functions, VPN egress, cluster internal services
+
+
+
+---
+
+Key Security & Anti-Fingerprinting Measures
+
+VPN Rotation:
+
+Every 30 minutes, all nodes received fresh VPN tunnel IPs.
+
+VPN endpoint locations randomized between providers.
+
+
+MAC Address Randomization:
+
+CM4 OpenWRT node randomized DHCP MACs and static MACs periodically.
+
+
+Disk Reimage Strategy:
+
+Every 30 minutes, lightweight nodes reinstalled clean OS images from local server.
+
+Wiped residual temp/cache/OS fingerprints.
+
+
+DNS Obfuscation:
+
+Custom DNS resolver setup inside OpenWRT.
+
+Queries routed through anonymized chains.
+
+
+Connection Lifespan Enforcement:
+
+Forced connection resets to avoid building long session fingerprints.
+
+
+
+
+---
+
+Diagram (Text Version)
+
+[PowerSpec B732 Controller]
+        |
+   [Managed Gigabit Switch #1]  -- [Managed Gigabit Switch #2]
+        |                                |
+    [Drobo 800fs NAS]               [OpenWRT Router on CM4]
+        |                                |
+    [RPi4 Cluster]                  [VPN Egress -> Internet]
+    [Jetson Nano Nodes]    
+    [Turing Pi + CM3 Nodes]
+
+
+---
+
+Final Thoughts
+
+> "Cluster until they trust ya, rotate until they can't catch ya."
+
+
+
+
+---
+
+TL;DR:
+
+Standalone.
+Air-gapped.
+VPNs on steroids.
+Zero fingerprints left.
+
+
+---
