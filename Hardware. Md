@@ -1,0 +1,14 @@
+12x Raspberry Pi 4 (8GB RAM)
+
+2x NVIDIA Jetson Nano (4GB models)
+
+2x Turing Pi Cluster Boards populated with:
+
+14x Raspberry Pi Compute Module 3 (CM3)
+
+
+3x Raspberry Pi Compute Module 4 (CM4) with PoE Carrier Boards
+
+1x PowerSpec B732 Workstation (cluster brain/controller)
+
+1x Drobo 800fs NAS (18TB Networked Storage)
